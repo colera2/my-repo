@@ -1,0 +1,19 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.env
+
+# ── Node.js ──
+node_modules/
+dist/
+build/
+
+# ── IDE / OS ──
+.vscode/
+.idea/
+*.suo
+*.user
+*.DS_Store
+thumbs.db
