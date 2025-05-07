@@ -13,7 +13,6 @@ export default function FileUploader() {
     }
 
     // 2) 이제 filename 파라미터만 넘깁니다.
-    const encodedName = encodeURIComponent(file.name);
     const url = `/api/db_upload?filename=${encodeURIComponent(file.name)}`;
 
     try {
