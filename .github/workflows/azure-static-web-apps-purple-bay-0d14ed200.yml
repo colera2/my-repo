@@ -2,67 +2,70 @@ name: Azure Static Web Apps CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    if: github.event_name == 'push' ||
+        (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
     permissions:
       id-token: write
       contents: read
     steps:
-      # 1) 리포지터리 체크아웃
+      # 1) 코드 체크아웃
       - uses: actions/checkout@v3
         with:
           submodules: true
           lfs: false
 
-      # 2) Python 런타임 & 라이브러리 설치
+      # 2) Python 설치 (Functions용)
       - name: Setup Python 3.9
         uses: actions/setup-python@v2
         with:
           python-version: '3.9'
+
+      # 3) Python 라이브러리 설치
       - name: Install Python dependencies
         run: |
           cd api
           pip install -r requirements.txt \
             --target .python_packages/lib/site-packages
 
-      # 3) OIDC 클라이언트 설치
+      # 4) OIDC 토큰 설치 (Static Web Apps 배포용)
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
 
-      # 4) GitHub ID 토큰 발급
+      # 5) GitHub ID 토큰 발급 (Static Web Apps 인증)
       - name: Get Id Token
         uses: actions/github-script@v6
         id: idtoken
         with:
           script: |
-            const coredemo = require('@actions/core')
-            return await coredemo.getIDToken()
+            const core = require('@actions/core')
+            return await core.getIDToken()
           result-encoding: string
 
-      # 5) Static Web Apps 빌드 & 배포
+      # 6) 빌드 & 배포
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
+        # ───────────────────────────────────
+        # Python 함수 런타임 언어를 명시적으로 지정
+        env:
+          FUNCTIONS_WORKER_RUNTIME: python
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PURPLE_BAY_0D14ED200 }}
-          action: "upload"
-          ###### Repository/Build Configurations ######
-          app_location: "app"      # React 앱 소스
-          api_location: "api"      # Functions 코드
-          output_location: "build" # 빌드 결과물
-          skip_api_build: true     # Python 함수 배포용
+          action: upload
+          app_location: app
+          api_location: api
+          output_location: build
+          skip_api_build: true
           github_id_token: ${{ steps.idtoken.outputs.result }}
-          ###### End of Config ######
+        # ───────────────────────────────────
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -70,7 +73,6 @@ jobs:
     name: Close Pull Request Job
     steps:
       - name: Close Pull Request
-        id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
-          action: "close"
+          action: close
