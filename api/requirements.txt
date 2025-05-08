@@ -5,3 +5,4 @@
 azure-functions
 pandas
 psycopg2-binary
+openpyxl
