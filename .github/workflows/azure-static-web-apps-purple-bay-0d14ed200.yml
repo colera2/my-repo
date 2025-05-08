@@ -63,7 +63,7 @@ jobs:
           app_location: app
           api_location: api
           output_location: build
-          skip_api_build: true
+          skip_api_build: false
           github_id_token: ${{ steps.idtoken.outputs.result }}
         # ───────────────────────────────────
 
