@@ -5,11 +5,11 @@ from psycopg2.extras import execute_values
 import traceback
 
 # ── DB 접속 정보 ──
-DB_HOST     = "db1-dev.postgres.database.azure.com"
-DB_USER     = "dev"
-DB_PASSWORD = "@Vkdlxhdnpdl0"
-DB_PORT     = 5432
-DB_NAME     = "dainDB"
+DB_HOST     = os.environ.get("DB_HOST")
+DB_USER     = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_PORT     = int(os.environ.get("DB_PORT", 5432))
+DB_NAME     = os.environ.get("DB_NAME")
 
 # ── 사용자정의채널 전용 컬럼 정의 ──
 CUSTOM_ORDER_COLUMNS = [
