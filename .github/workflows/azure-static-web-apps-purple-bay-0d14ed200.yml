@@ -23,10 +23,10 @@ jobs:
           lfs: false
 
       # 2) Python 설치 (Functions용)
-      - name: Setup Python 3.9
-        uses: actions/setup-python@v2
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       # 3) Python 라이브러리 설치
       - name: Install Python dependencies
