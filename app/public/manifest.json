@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "보고서 업로드",
+  "name": "마케팅 성과 보고서 업로드",
   "icons": [
     {
       "src": "favicon.ico",
