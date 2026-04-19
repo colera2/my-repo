@@ -1,17 +1,37 @@
 import os, re
+import logging
 import pandas as pd
 import psycopg2
 from psycopg2.extras import execute_values
 import traceback
 
-# ── DB 접속 정보 ──
+logger = logging.getLogger(__name__)
+
+# =============================================================================
+# DB 접속 정보
+# - 보안을 위해 코드에 직접 입력하지 않고 환경변수로 작성
+# - Azure Static Web Apps > Configuration 메뉴에 값을 등록해두면 자동으로 불러온다
+# =============================================================================
 DB_HOST     = os.environ.get("DB_HOST")
 DB_USER     = os.environ.get("DB_USER")
 DB_PASSWORD = os.environ.get("DB_PASSWORD")
 DB_PORT     = int(os.environ.get("DB_PORT", 5432))
 DB_NAME     = os.environ.get("DB_NAME")
 
-# ── 사용자정의채널 전용 컬럼 정의 ──
+# 필수 환경변수 누락 시 서버 시작 단계에서 즉시 에러 발생
+_REQUIRED = {"DB_HOST": DB_HOST, "DB_USER": DB_USER,
+             "DB_PASSWORD": DB_PASSWORD, "DB_NAME": DB_NAME}
+_MISSING  = [k for k, v in _REQUIRED.items() if not v]
+if _MISSING:
+    raise EnvironmentError(f"필수 환경변수가 설정되지 않았습니다: {_MISSING}")
+
+# =============================================================================
+# 파일명 및 컬럼 정의
+# - 각 파일별 DB에 저장할 컬럼 이름 목록
+# - 네이버 엑셀 파일 (사용자정의채널, 검색채널) 파일명 패턴 정의
+# =============================================================================
+
+# 네이버 사용자정의채널 엑셀 파일의 컬럼 순서
 CUSTOM_ORDER_COLUMNS = [
     "yymmdd","device","nt_source","nt_medium","nt_detail","nt_keyword",
     "customer_cnt","inflow_cnt","page_cnt","page_inflow_cnt","order_cnt",
@@ -19,7 +39,7 @@ CUSTOM_ORDER_COLUMNS = [
     "contribute_inflow_per","contribute_price","contribute_inflow_price"
 ]
 
-# ── pa_daily_keyword 전용 컬럼 정의 ──
+# 쿠팡 PA 키워드 엑셀 파일의 컬럼 순서 (44개 + reg_date + account = 46개)
 TARGET_COLUMNS_PA_DAILY = [
     "A","B","sales_type","ad_type","campaign_id","campaign","ad_group",
     "product1","product1_id","product2","product2_id","adspace","keyword","non_ad",
@@ -28,15 +48,18 @@ TARGET_COLUMNS_PA_DAILY = [
     "AI","AJ","AK","AL","AM","AN","AO","AP","reg_date","account"
 ]
 
+# 네이버 채널 엑셀 파일명 패턴: "사용자정의채널_2025-01-01_2025-01-31.xlsx"
 EXCEL_FILENAME_RE = re.compile(r'^(사용자정의채널|검색채널)_(\d{4}-\d{2}-\d{2})_\d{4}-\d{2}-\d{2}$')
 
-# ── 디버깅 헬퍼 ──
-def debug_print_columns(df, file_path, label=""):
-    print(f"DEBUG ({label}): {file_path} -> columns={df.shape[1]}")
-    print("   ", df.columns.tolist())
 
-# ── DB 연결 헬퍼 ──
+# =============================================================================
+# DB 연결
+# =============================================================================
 def get_db_connection():
+    """
+    환경변수에 등록된 접속 정보로 PostgreSQL DB에 연결합니다.
+    연결 실패 시 에러를 위로 전달해 업로드 요청이 500 에러를 반환하게 합니다.
+    """
     try:
         return psycopg2.connect(
             host=DB_HOST, port=DB_PORT,
@@ -44,12 +67,20 @@ def get_db_connection():
             password=DB_PASSWORD
         )
     except Exception as e:
-        print("DB 연결 오류:", e)
+        logger.error("DB 연결 오류: %s", e)
         traceback.print_exc()
         raise
 
-# ── 공통 INSERT 함수 ──
+
+# =============================================================================
+# 공통 INSERT 함수
+# =============================================================================
 def insert_dataframe(conn, df, table_name, columns):
+    """
+    DataFrame을 받아 지정한 테이블에 INSERT합니다.
+    - 이미 동일한 데이터가 있으면 건너뜁니다 (ON CONFLICT DO NOTHING)
+    - INSERT 실패 시 롤백 후 에러를 위로 전달합니다
+    """
     try:
         df2 = df[columns]
         data = [tuple(r) for r in df2.to_numpy()]
@@ -60,12 +91,20 @@ def insert_dataframe(conn, df, table_name, columns):
         conn.commit()
     except Exception as e:
         conn.rollback()
-        print(f"{table_name} 삽입 오류:", e)
+        logger.error("%s 삽입 오류: %s", table_name, e)
         traceback.print_exc()
         raise
 
-# ── A,B,C... 컬럼명 생성 헬퍼 ──
+
+# =============================================================================
+# 헬퍼 함수
+# =============================================================================
 def generate_excel_columns(n):
+    """
+    n개의 엑셀식 컬럼명을 생성합니다.
+    예) n=3 → ["A", "B", "C"] / n=28 → ["A", ..., "AB"]
+    헤더 없는 파일을 읽을 때 컬럼명으로 사용합니다.
+    """
     cols = []
     for i in range(n):
         s = ""
@@ -77,103 +116,145 @@ def generate_excel_columns(n):
         cols.append(s)
     return cols
 
-# ── 엑셀 기반 채널 처리 ──
-import os, re
-import pandas as pd
 
-# 파일명 패턴: "사용자정의채널_YYYY-MM-DD_YYYY-MM-DD.xlsx"
-EXCEL_FILENAME_RE = re.compile(r'^(사용자정의채널|검색채널)_(\d{4}-\d{2}-\d{2})_\d{4}-\d{2}-\d{2}$')
+# =============================================================================
+# 파일 종류별 처리 함수
+# - 파일 읽기 → 컬럼 수 검증(잘못된 파일이면 즉시 에러) → 가공 → DB 저장
+# =============================================================================
 
 def process_excel_file(conn, file_path, channel_type):
-    # ── 1) file_date를 파일명에서 추출 ──
+    """
+    네이버 채널 엑셀 파일을 처리합니다.
+    - 사용자정의채널 → Naver_Custom_Order 테이블
+    - 검색채널       → Naver_Search_Channel 테이블
+
+    파일명에서 날짜를 추출해 yymmdd 컬럼으로 저장합니다.
+    파일명 패턴이 맞지 않으면 즉시 에러를 발생시킵니다.
+    """
     fname = os.path.splitext(os.path.basename(file_path))[0]
     m = EXCEL_FILENAME_RE.match(fname)
     if not m:
         raise ValueError(f"파일명 패턴 불일치: {fname}")
-    _, file_date = m.groups()  # ex: "2025-04-07"
 
-    # ── 2) 데이터 읽기 ──
-    df = pd.read_excel(file_path, header=None, skiprows=1)
+    _, file_date = m.groups()  # 예) "2025-01-01"
+    df = pd.read_excel(file_path, header=None, skiprows=1)  # 1행(헤더) 제외하고 읽기
 
-    # ── 3) 실제 채널별 컬럼만 슬라이스, 이름 붙이기 ──
     if channel_type == "사용자정의채널":
-        base = CUSTOM_ORDER_COLUMNS[1:]   # ['device', 'nt_source', …]
+        base = CUSTOM_ORDER_COLUMNS[1:]        # yymmdd 제외한 나머지 컬럼
         sub = df.iloc[:, :len(base)].copy()
         sub.columns = base
-        # (필요한 수치 변환 로직 모두 여기에…)
-
-        # ── 4) 맨 앞에 file_date 삽입 ──
-        sub.insert(0, "yymmdd", file_date)
-
+        sub.insert(0, "yymmdd", file_date)     # 맨 앞에 날짜 컬럼 추가
         table = "Naver_Custom_Order"
         cols  = CUSTOM_ORDER_COLUMNS
 
     else:  # 검색채널
-        cols16 = generate_excel_columns(16)  # ["A","B",…,"P"]
+        cols16 = generate_excel_columns(16)    # A~P 컬럼명 생성
         sub = df.iloc[:, :16].copy()
         sub.columns = cols16
-        sub.insert(0, "yymmdd", file_date)
-
+        sub.insert(0, "yymmdd", file_date)     # 맨 앞에 날짜 컬럼 추가
         table = "Naver_Search_Channel"
         cols  = ["yymmdd"] + cols16
 
-    # ── 5) 삽입 ──
     insert_dataframe(conn, sub, table, cols)
 
 
-
-
-# ── pa_daily_keyword 처리 ──
 def process_pa_daily_keyword(conn, file_path, account):
+    """
+    쿠팡 PA 키워드 엑셀 파일을 처리해 ad_coupang 테이블에 저장합니다.
+    - 파일은 반드시 44개 컬럼이어야 합니다 (다르면 즉시 에러)
+    - 날짜 컬럼(A열)을 YYYY-MM-DD 형식으로 변환합니다
+    - 비율 컬럼(AJ~AO)의 % 기호를 제거하고 숫자로 변환합니다
+    - account는 파일명에서 추출한 계정명입니다
+    """
     df = pd.read_excel(file_path, header=None, skiprows=1)
-    debug_print_columns(df, file_path, "Original")
+
     if df.shape[1] != 44:
-        print(f"ERROR: 컬럼개수 {df.shape[1]} != 44")
-        return
+        raise ValueError(
+            f"컬럼 개수 오류: {df.shape[1]}개 (44개여야 함) — 파일: {file_path}"
+        )
 
     df.columns = generate_excel_columns(44)
+
+    # 13번째 위치에 non_ad 컬럼 삽입 (원본 파일에 없는 컬럼)
     df.insert(13, "non_ad", None)
-    df.iloc[:,44] = df["A"].astype(str).apply(
-        lambda x: f"{x[:4]}-{x[4:6]}-{x[6:]}" if len(x)>=8 else None
+
+    # A열(날짜, 예: "20250101") → "2025-01-01" 형식으로 변환 후 reg_date 컬럼으로 저장
+    df.iloc[:, 44] = df["A"].astype(str).apply(
+        lambda x: f"{x[:4]}-{x[4:6]}-{x[6:]}" if len(x) >= 8 else None
     )
     df.columns.values[44] = "reg_date"
     df["account"] = account
 
-    for col in ["AJ","AK","AL","AM","AN","AO"]:
+    # 비율(%) 컬럼에서 % 기호 제거 후 숫자로 변환
+    for col in ["AJ", "AK", "AL", "AM", "AN", "AO"]:
         if col in df:
             df[col] = pd.to_numeric(
-                df[col].astype(str).str.replace("%",""), errors="coerce"
+                df[col].astype(str).str.replace("%", ""), errors="coerce"
             )
 
     df.columns = TARGET_COLUMNS_PA_DAILY
     insert_dataframe(conn, df, "ad_coupang", TARGET_COLUMNS_PA_DAILY)
 
-# ── CSV 처리: 검색광고 ──
+
 def process_csv_ad_naver(conn, file_path, sub_account):
+    """
+    네이버 검색광고 CSV 파일을 처리해 ad_naver 테이블에 저장합니다.
+    - 상위 2행(설명 행)을 건너뛰고 읽습니다
+    - 28개 컬럼이 필요합니다 (부족하면 즉시 에러)
+    - A열(날짜)을 YYYY-MM-DD 형식으로 변환합니다
+    - 숫자 컬럼의 쉼표(,)를 제거하고 숫자로 변환합니다
+    - sub_account는 파일명에서 추출한 하위 계정명입니다
+    """
     expected = generate_excel_columns(28)
     df = pd.read_csv(file_path, skiprows=2, header=None)
-    debug_print_columns(df, file_path, "Original")
-    df = df.iloc[:,:28]; df.columns = expected
+
+    if df.shape[1] < 28:
+        raise ValueError(
+            f"컬럼 개수 오류: {df.shape[1]}개 (28개 이상이어야 함) — 파일: {file_path}"
+        )
+
+    df = df.iloc[:, :28]
+    df.columns = expected
     df["reg_date"] = df["A"].astype(str).str.replace(".", "-", regex=False).str[:10]
     df["id"] = sub_account
-    for c in set(expected[11:])|{"AA","AB"}:
+
+    # 쉼표 제거 후 숫자로 변환
+    for c in set(expected[11:]) | {"AA", "AB"}:
         if c in df:
             df[c] = pd.to_numeric(
-                df[c].astype(str).str.replace(",",""), errors="coerce"
+                df[c].astype(str).str.replace(",", ""), errors="coerce"
             )
-    insert_dataframe(conn, df, "ad_naver", expected + ["reg_date","id"])
 
-# ── CSV 처리: 키워드보고서 ──
+    insert_dataframe(conn, df, "ad_naver", expected + ["reg_date", "id"])
+
+
 def process_csv_ad_naver_keyword(conn, file_path, sub_account):
-    cols = ["order_date","campaign","ad_group","keyword",
-            "imp_cnt","click_cnt","order_cnt","cost","order_price"]
+    """
+    네이버 키워드보고서 CSV 파일을 처리해 ad_naver_keyword2 테이블에 저장합니다.
+    - 상위 2행(설명 행)을 건너뛰고 읽습니다
+    - 9개 컬럼이 필요합니다 (부족하면 즉시 에러)
+    - 날짜를 YYYY-MM-DD 형식으로 변환합니다
+    - 수치 컬럼의 쉼표(,)를 제거하고 숫자로 변환합니다
+    - sub_account는 파일명에서 추출한 하위 계정명입니다
+    """
+    cols = ["order_date", "campaign", "ad_group", "keyword",
+            "imp_cnt", "click_cnt", "order_cnt", "cost", "order_price"]
     df = pd.read_csv(file_path, skiprows=2, header=None)
-    debug_print_columns(df, file_path, "Original")
-    df = df.iloc[:,:len(cols)]; df.columns = cols
+
+    if df.shape[1] < len(cols):
+        raise ValueError(
+            f"컬럼 개수 오류: {df.shape[1]}개 ({len(cols)}개 이상이어야 함) — 파일: {file_path}"
+        )
+
+    df = df.iloc[:, :len(cols)]
+    df.columns = cols
     df["yymmdd"]  = df["order_date"].astype(str).str.replace(".", "-", regex=False).str[:10]
     df["account"] = sub_account
-    for c in ["imp_cnt","click_cnt","order_cnt","cost","order_price"]:
+
+    # 쉼표 제거 후 숫자로 변환
+    for c in ["imp_cnt", "click_cnt", "order_cnt", "cost", "order_price"]:
         df[c] = pd.to_numeric(
-            df[c].astype(str).str.replace(",",""), errors="coerce"
+            df[c].astype(str).str.replace(",", ""), errors="coerce"
         )
-    insert_dataframe(conn, df, "ad_naver_keyword2", cols + ["yymmdd","account"])
+
+    insert_dataframe(conn, df, "ad_naver_keyword2", cols + ["yymmdd", "account"])
