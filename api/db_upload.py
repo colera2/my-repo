@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # DB 접속 정보
 # - 보안을 위해 코드에 직접 입력하지 않고 환경변수로 작성
-# - Azure Static Web Apps > Configuration 메뉴에 값을 등록해두면 자동으로 불러온다
+# - Azure Static Web Apps 에서 환경변수 값을 불러온다
 # =============================================================================
 DB_HOST     = os.environ.get("DB_HOST")
 DB_USER     = os.environ.get("DB_USER")
