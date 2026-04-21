@@ -18,7 +18,7 @@
 
 /* ── 기존 박스 디자인 유지 ── */
 .uploader-container {
-  max-width: 600px;
+  max-width: 550px;
   width: 100%;
   margin: 0 auto;
   padding: 28px 24px 24px;
@@ -89,17 +89,20 @@
   font-size: 11px;
   border-radius: 3px;
   display: inline-block;
+  margin-left: -6px;
+  align-self: flex-start; 
+  
 }
 
 .format-item {
-  font-size: 10px;
-  color: #888;
+  font-size: 11px;
+  color: #adb5bd;
   margin: 0;
   line-height: 1.2;
 }
 
 .format-platform {
-  font-weight: 700;
-  color: #777;
+  font-weight: 500;
+  color: #adb5bd;
   margin-right: 4px;
 }
