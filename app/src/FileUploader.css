@@ -1,135 +1,95 @@
-/* 전체 배경 설정 */
-.page-container {
-  background-color: #ffffff;
+/* ── 전체 페이지 레이아웃 ── */
+.page-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
-  padding-top: 50px;
-  font-family: 'Pretendard', -apple-system, sans-serif;
+  padding: 60px 20px 40px;
 }
 
-/* 1. 헤더 스타일 */
-.header-section {
-  margin-bottom: 40px;
-}
-
-.main-title {
-  font-size: 42px;
+/* ── 박스 위 큰 제목 ── */
+.page-title {
+  font-size: 32px;
   font-weight: 800;
-  color: #000;
-}
-
-/* 2. 카드 디자인 (이미지와 동일하게) */
-.upload-card {
-  background: #f8f9fa; /* 카드 배경은 아주 연한 회색 */
-  width: 100%;
-  max-width: 650px;
-  padding: 40px;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  color: #111;
+  margin: 0 0 28px;
+  letter-spacing: -0.5px;
   text-align: center;
 }
 
-.upload-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.upload-icon {
-  font-size: 24px;
-}
-
-.upload-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-}
-
-.drag-guide {
-  font-size: 16px;
-  color: #adb5bd;
-  margin-bottom: 35px;
-}
-
-/* 파일 선택 영역 */
-.file-select-area {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 15px;
-  margin-bottom: 25px;
-  padding-left: 40px; /* 이미지처럼 왼쪽 정렬 느낌 */
-}
-
-.file-label {
-  background-color: #cfe2ff; /* 연한 파란색 버튼 */
-  color: #084298;
-  padding: 8px 16px;
+/* ── 기존 박스 디자인 유지 ── */
+.uploader-container {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 24px 24px;
+  border: 1px solid #ddd;
   border-radius: 6px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── 박스 안 작은 레이블 ── */
+.uploader-label {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+/* ── 파일 input ── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group input[type="file"] {
   font-size: 14px;
+  color: #444;
   cursor: pointer;
-  border: 1px solid #b6d4fe;
 }
 
-.hidden-input {
-  display: none;
-}
-
-.file-name {
-  font-size: 14px;
-  color: #495057;
-}
-
-/* 업로드 버튼 */
+/* ── 업로드 버튼 ── */
 .upload-button {
   width: 100%;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
-  background-color: #e9ecef;
-  color: #adb5bd;
-  font-size: 20px;
-  font-weight: 600;
-  cursor: not-allowed;
-  transition: all 0.2s;
-}
-
-.upload-button.active {
-  background-color: #0d6efd;
-  color: white;
+  padding: 10px;
+  font-size: 16px;
   cursor: pointer;
-}
-
-/* 3. 하단 가이드 섹션 */
-.guide-footer {
-  width: 100%;
-  max-width: 650px;
-  margin-top: 30px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.guide-box {
-  text-align: left;
-}
-
-.guide-tag {
-  background-color: #f1f3f5;
-  color: #adb5bd;
-  padding: 2px 8px;
-  font-size: 12px;
+  background: #fff;
+  border: 1px solid #ccc;
   border-radius: 4px;
-  display: inline-block;
-  margin-bottom: 8px;
+  transition: background 0.15s;
 }
 
-.guide-text {
+.upload-button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.upload-button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+/* ── 지원 파일 안내 ── */
+.format-guide {
+  border-top: 1px solid #e5e5e5;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.format-item {
   font-size: 12px;
-  color: #ced4da;
+  color: #777;
+  margin: 0;
   line-height: 1.6;
+}
+
+.format-platform {
+  font-weight: 700;
+  color: #555;
+  margin-right: 4px;
 }
