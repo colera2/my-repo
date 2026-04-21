@@ -60,6 +60,7 @@ export default function FileUploader() {
 
         {/* 지원 파일 안내 */}
         <div className="format-guide">
+          <p className="format-title">지원 파일</p>
           <p className="format-item">
             <span className="format-platform">네이버 :</span>
             검색광고 보고서, 검색채널 보고서, 사용자 정의 채널 보고서, 키워드 보고서
