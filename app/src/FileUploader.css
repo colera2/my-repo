@@ -1,32 +1,246 @@
-/* FileUploader.css */
-.uploader-container {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+/* ── 전체 페이지 배경 ── */
+.page {
+  min-height: 100vh;
+  background: #f5f6f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+/* ── 카드 ── */
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: 48px 40px 40px;
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── 헤더 ── */
+.card-header {
+  text-align: center;
+}
+
+.icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── 드래그앤드롭 영역 ── */
+.drop-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 14px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
   background: #fafafa;
 }
 
-.uploader-title {
-  text-align: center;
-  margin-bottom: 20px;
+.drop-zone:hover {
+  border-color: #6366f1;
+  background: #f5f3ff;
 }
 
-.form-group {
-  margin-bottom: 16px;
+.drop-zone.dragging {
+  border-color: #6366f1;
+  background: #ede9fe;
+  transform: scale(1.01);
+}
+
+.drop-zone.has-file {
+  border-color: #10b981;
+  background: #f0fdf4;
+  border-style: solid;
+}
+
+/* 드롭 안내 */
+.drop-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.drop-text {
+  font-size: 15px;
+  color: #374151;
+  margin: 0 0 6px;
+}
+
+.link {
+  color: #6366f1;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.drop-hint {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* 파일 선택됨 */
+.file-info {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
-.form-group label {
-  margin-bottom: 6px;
-  font-weight: bold;
+.file-icon {
+  font-size: 32px;
 }
 
-.upload-button {
+.file-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  word-break: break-all;
+}
+
+.file-size {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ── 지원 파일 형식 안내 ── */
+.format-guide {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.format-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 10px;
+}
+
+.format-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #374151;
+  font-family: 'Courier New', monospace;
+}
+
+/* ── 결과 메시지 ── */
+.message {
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.message.success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.message.error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* ── 업로드 버튼 ── */
+.upload-btn {
   width: 100%;
-  padding: 10px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #6366f1;
+  color: #ffffff;
   font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: -0.2px;
+}
+
+.upload-btn:hover:not(:disabled) {
+  background: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+.upload-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.upload-btn.loading {
+  background: #6366f1;
+  cursor: not-allowed;
+}
+
+/* ── 로딩 스피너 ── */
+.spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 모바일 대응 ── */
+@media (max-width: 480px) {
+  .card {
+    padding: 32px 24px 28px;
+  }
+  .title {
+    font-size: 20px;
+  }
 }
