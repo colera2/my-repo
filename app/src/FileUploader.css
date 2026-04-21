@@ -1,246 +1,135 @@
-/* ── 전체 페이지 배경 ── */
-.page {
-  min-height: 100vh;
-  background: #f5f6f8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-}
-
-/* ── 카드 ── */
-.card {
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  padding: 48px 40px 40px;
-  width: 100%;
-  max-width: 560px;
+/* 전체 배경 설정 */
+.page-container {
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  align-items: center;
+  min-height: 100vh;
+  padding-top: 50px;
+  font-family: 'Pretendard', -apple-system, sans-serif;
 }
 
-/* ── 헤더 ── */
-.card-header {
+/* 1. 헤더 스타일 */
+.header-section {
+  margin-bottom: 40px;
+}
+
+.main-title {
+  font-size: 42px;
+  font-weight: 800;
+  color: #000;
+}
+
+/* 2. 카드 디자인 (이미지와 동일하게) */
+.upload-card {
+  background: #f8f9fa; /* 카드 배경은 아주 연한 회색 */
+  width: 100%;
+  max-width: 650px;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   text-align: center;
 }
 
-.icon {
-  font-size: 40px;
-  display: block;
-  margin-bottom: 12px;
+.upload-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
-.title {
+.upload-icon {
+  font-size: 24px;
+}
+
+.upload-title {
   font-size: 24px;
   font-weight: 700;
-  color: #111827;
-  margin: 0 0 8px;
-  letter-spacing: -0.5px;
+  color: #333;
 }
 
-.subtitle {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0;
-  line-height: 1.6;
+.drag-guide {
+  font-size: 16px;
+  color: #adb5bd;
+  margin-bottom: 35px;
 }
 
-/* ── 드래그앤드롭 영역 ── */
-.drop-zone {
-  border: 2px dashed #d1d5db;
-  border-radius: 14px;
-  padding: 40px 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: #fafafa;
-}
-
-.drop-zone:hover {
-  border-color: #6366f1;
-  background: #f5f3ff;
-}
-
-.drop-zone.dragging {
-  border-color: #6366f1;
-  background: #ede9fe;
-  transform: scale(1.01);
-}
-
-.drop-zone.has-file {
-  border-color: #10b981;
-  background: #f0fdf4;
-  border-style: solid;
-}
-
-/* 드롭 안내 */
-.drop-icon {
-  font-size: 36px;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.drop-text {
-  font-size: 15px;
-  color: #374151;
-  margin: 0 0 6px;
-}
-
-.link {
-  color: #6366f1;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.drop-hint {
-  font-size: 13px;
-  color: #9ca3af;
-  margin: 0;
-}
-
-/* 파일 선택됨 */
-.file-info {
+/* 파일 선택 영역 */
+.file-select-area {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-start;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding-left: 40px; /* 이미지처럼 왼쪽 정렬 느낌 */
 }
 
-.file-icon {
-  font-size: 32px;
+.file-label {
+  background-color: #cfe2ff; /* 연한 파란색 버튼 */
+  color: #084298;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid #b6d4fe;
+}
+
+.hidden-input {
+  display: none;
 }
 
 .file-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111827;
-  word-break: break-all;
-}
-
-.file-size {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-/* ── 지원 파일 형식 안내 ── */
-.format-guide {
-  background: #f9fafb;
-  border-radius: 12px;
-  padding: 16px 20px;
-}
-
-.format-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 10px;
-}
-
-.format-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.badge {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 12px;
-  color: #374151;
-  font-family: 'Courier New', monospace;
-}
-
-/* ── 결과 메시지 ── */
-.message {
-  border-radius: 10px;
-  padding: 14px 18px;
   font-size: 14px;
-  font-weight: 500;
-  text-align: center;
+  color: #495057;
 }
 
-.message.success {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-}
-
-.message.error {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-}
-
-/* ── 업로드 버튼 ── */
-.upload-btn {
+/* 업로드 버튼 */
+.upload-button {
   width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  background: #6366f1;
-  color: #ffffff;
-  font-size: 16px;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  background-color: #e9ecef;
+  color: #adb5bd;
+  font-size: 20px;
   font-weight: 600;
+  cursor: not-allowed;
+  transition: all 0.2s;
+}
+
+.upload-button.active {
+  background-color: #0d6efd;
+  color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
-  letter-spacing: -0.2px;
 }
 
-.upload-btn:hover:not(:disabled) {
-  background: #4f46e5;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
-}
-
-.upload-btn:disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.upload-btn.loading {
-  background: #6366f1;
-  cursor: not-allowed;
-}
-
-/* ── 로딩 스피너 ── */
-.spinner-wrap {
+/* 3. 하단 가이드 섹션 */
+.guide-footer {
+  width: 100%;
+  max-width: 650px;
+  margin-top: 30px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  justify-content: flex-start;
 }
 
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+.guide-box {
+  text-align: left;
+}
+
+.guide-tag {
+  background-color: #f1f3f5;
+  color: #adb5bd;
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: 4px;
   display: inline-block;
+  margin-bottom: 8px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ── 모바일 대응 ── */
-@media (max-width: 480px) {
-  .card {
-    padding: 32px 24px 28px;
-  }
-  .title {
-    font-size: 20px;
-  }
+.guide-text {
+  font-size: 12px;
+  color: #ced4da;
+  line-height: 1.6;
 }
