@@ -1,64 +1,75 @@
 import React, { useState } from 'react';
 import './FileUploader.css';
 
-const FileUploader = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
+export default function FileUploader() {
+  const [file, setFile] = useState(null);
 
-  const handleFileChange = (e) => {
-    if (e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
+  const handleUpload = async () => {
+    if (!file) {
+      alert('파일을 선택해주세요.');
+      return;
+    }
+
+    const url = `/api/upload?filename=${encodeURIComponent(file.name)}`;
+
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: file
+      });
+
+      if (resp.ok) {
+        alert('업로드 성공!');
+        setFile(null);
+      } else {
+        const text = await resp.text();
+        alert('업로드 실패: ' + text);
+      }
+    } catch (e) {
+      alert('업로드 중 오류: ' + e.message);
     }
   };
 
   return (
-    <div className="page-container">
-      {/* 1. 헤더 섹션 */}
-      <header className="header-section">
-        <h1 className="main-title">마케팅 보고서 업로드</h1>
-      </header>
+    <div className="page-wrapper">
+      {/* 박스 위 제목 */}
+      <h1 className="page-title">마케팅 보고서 업로드</h1>
 
-      {/* 2. 메인 업로드 카드 */}
-      <main className="upload-card">
-        <div className="upload-header">
-          <span className="upload-icon">📥</span>
-          <h2 className="upload-title">파일 업로드</h2>
-        </div>
-        
-        <p className="drag-guide">파일을 여기에 드래그하거나 클릭하세요</p>
+      <div className="uploader-container">
+        {/* 박스 안 작은 제목 */}
+        <p className="uploader-label">📥 파일 업로드</p>
 
-        <div className="file-select-area">
-          <label htmlFor="file-input" className="file-label">파일 선택</label>
-          <input 
-            type="file" 
-            id="file-input" 
-            onChange={handleFileChange} 
-            className="hidden-input"
+        {/* 파일 선택 input — "파일 선택" 문구 없이 input만 */}
+        <div className="form-group">
+          <input
+            id="file-input"
+            type="file"
+            accept=".xlsx,.csv"
+            onChange={e => setFile(e.target.files?.[0] ?? null)}
           />
-          <span className="file-name">
-            {selectedFile ? selectedFile.name : "선택된 파일 없음"}
-          </span>
         </div>
 
-        <button 
-          className={`upload-button ${selectedFile ? 'active' : ''}`}
-          disabled={!selectedFile}
+        <button
+          className="upload-button"
+          onClick={handleUpload}
+          disabled={!file}
         >
           업로드
         </button>
-      </main>
 
-      {/* 3. 하단 지원 파일 가이드 */}
-      <footer className="guide-footer">
-        <div className="guide-box">
-          <span className="guide-tag">지원 파일</span>
-          <p className="guide-text">
-            네이버 : 검색광고, 검색채널, 사용자 정의 채널, 키워드 보고서<br/>
-            쿠팡 : 키워드 보고서
+        {/* 지원 파일 안내 */}
+        <div className="format-guide">
+          <p className="format-item">
+            <span className="format-platform">네이버 :</span>
+            검색광고 보고서, 검색채널 보고서, 사용자 정의 채널 보고서, 키워드 보고서
+          </p>
+          <p className="format-item">
+            <span className="format-platform">쿠팡 :</span>
+            광고 보고서
           </p>
         </div>
-      </footer>
+      </div>
     </div>
   );
-};
-
-export default FileUploader;
+}
