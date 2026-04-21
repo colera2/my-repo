@@ -79,17 +79,18 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  text-align: left;
 }
 
 .format-item {
-  font-size: 12px;
-  color: #777;
+  font-size: 10px;
+  color: #888;
   margin: 0;
   line-height: 1.6;
 }
 
 .format-platform {
   font-weight: 700;
-  color: #555;
+  color: #777;
   margin-right: 4px;
 }
